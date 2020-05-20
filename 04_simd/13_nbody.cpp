@@ -49,7 +49,7 @@ int main() {
                 fxi = _mm256_blendv_ps(no_distance, fxi, mask);
                 fyi = _mm256_blendv_ps(no_distance, fyi, mask);
 
-                //reduction or we can use some temp array to store the values
+                //we can use eduction or some temp array to store the values
 
                 //_mm256_store_ps(fyivec, fyi);
                 //_mm256_store_ps(fxivec, fxi);  
