@@ -8,7 +8,7 @@ __global__ void sort(int *bucket, int *key, int range) {
   
   __syncthreads(); //wait for buckets to be assigned 
 
-  int sum = 0; //variable to contain bucket values
+  int sum = 0; //variable that contains bucket values for each key[j]
   for(int i=0;;i++){ //values in key array
     if (sum<=j){ //sum controls how much to let i increase and the offset of adding it to key array
       key[j]=i; //assign values one by one, starting from i=0. Stop adding if the bucket is empty
