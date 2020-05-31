@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <immintrin.h>
 #include <cmath>
+
 int main() {
         const int N = 8;
         float x[N], y[N], m[N], fx[N], fy[N];
