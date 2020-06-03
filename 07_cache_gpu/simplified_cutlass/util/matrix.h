@@ -26,21 +26,15 @@
  ******************************************************************************/
 
 #pragma once
-
 /**
  * \file
  * Matrix data structure providing basic CPU-based algorithms and
  * operations that can be cloned and synchronized in GPU device memory
  */
-
 #include <vector>
 #include <fstream>
-
 #include <util/debug.h>
 #include "util/matrix_transform.h"
-#include "half.h"
-
-
 namespace cutlass {
 
 /**
@@ -52,8 +46,8 @@ struct matrix
 {
     // Host value type (must be convertible to/from value_t)
     typedef typename nv_std::conditional<
-            (nv_std::is_same<value_t, __half>::value),  // If (value_t == __half) ...
-            half_t,                                     // ... use half_t internally for host storage, else...
+            (nv_std::is_same<value_t, float>::value),  // If (value_t == float) ...
+            float,                                     // ... use float internally for host storage, else...
             value_t>::type                              // ... use value_t directly
         host_value_t;
 
@@ -136,34 +130,6 @@ public:
     //-----------------------------------------------------------------------------
 
     /**
-     * Return the height of the matrix, subject to the optional \p transpose_op
-     */
-    int height(matrix_transform_t transpose_op = matrix_transform_t::NonTranspose) const
-    {
-        switch (transpose_op)
-        {
-            case matrix_transform_t::NonTranspose :    return _m;
-            case matrix_transform_t::Transpose :       return _n;
-            default: return -1;
-        }
-    }
-
-
-    /**
-     * Return the width of the matrix, subject to the optional \p transpose_op
-     */
-    int width(matrix_transform_t transpose_op = matrix_transform_t::NonTranspose) const
-    {
-        switch (transpose_op)
-        {
-            case matrix_transform_t::NonTranspose :    return _n;
-            case matrix_transform_t::Transpose :       return _m;
-            default: return -1;
-        }
-    }
-
-
-    /**
      * Return item at (x, y) coordinate of matrix, subject to the optional \p transform op
      */
     host_value_t get(
@@ -178,8 +144,6 @@ public:
             default: return 0;
         }
     }
-
-
     /**
      * Return the distance (in items) within memory between elements of two
      * consecutive columns which have the same row index, subject to the optional \p transform op
@@ -193,7 +157,6 @@ public:
             default: return 0;
         }
     }
-
     /**
      * Get host data pointer
      */
@@ -230,66 +193,19 @@ public:
     //-----------------------------------------------------------------------------
     // Initialization
     //-----------------------------------------------------------------------------
-
-	/**
-     * Initialize matrix values with a 2D "ramp" defined as
-     * <tt>values(x, y) = (y * rs) + (x * cs)</tt>
-     */
-    void fill_ramp(
-        host_value_t rs,
-        host_value_t cs)
-    {
-        for (int x = 0; x < _n; x++)
-        {
-            for (int y = 0; y < _m; y++)
-            {
-                _h_data[y + (x * _m)] = host_value_t((y * rs) + (x * cs));
-            }
-        }
-    }
-
-
-	/**
-	 * Initialize matrix values such that all the elements of the principal diagonal
-     * are ones and all other elements are zeros
-     */
-    void fill_identity()
-    {
-        for (int j = 0; j < _n; j++)
-        {
-            for (int i = 0; i < _m; i++)
-            {
-                _h_data[i + j * _m] = host_value_t(i == j ? 1 : 0);
-            }
-        }
-    }
-
-
 	/**
 	 * Initialize matrix values using the random number \p generator.  The
      * \p generator reference is assumed to be a nullary functor that returns
      * values convertible to the matrix \p value_t.
      */
-    template <typename T>
-    void fill_random(T & generator)
-    {
-        for (int j = 0; j < _n; j++)
-        {
-            for (int i = 0; i < _m; i++)
-            {
-                _h_data[i + j * _m] = (value_t) generator();
-            }
+
+    void random() {
+        for (int j = 0; j < _n; j++) {
+        for (int i = 0; i < _m; i++) {
+            _h_data[i + j * _m] = drand48();
+        }
         }
     }
-
-  void random() {
-    for (int j = 0; j < _n; j++) {
-      for (int i = 0; i < _m; i++) {
-        _h_data[i + j * _m] = drand48();
-      }
-    }
-  }
-
 
     /**
      * Element-wise matrix addition
@@ -306,151 +222,9 @@ public:
         return *this;
     }
 
-    /**
-     * Element-wise matrix subtraction
-     */
-    matrix & operator-=(matrix const &mat)
-    {
-        for (int j = 0; j < _n; j++)
-        {
-            for (int i = 0; i < _m; i++)
-            {
-                _h_data[i + j * _m] -= mat._h_data[i + j * _m];
-            }
-        }
-        return *this;
-    }
-
-    //-----------------------------------------------------------------------------
-    // Output
-    //-----------------------------------------------------------------------------
-
-    /**
-     * Prints matrix in CSV to output stream
-     */
-    template <typename _hv_t>
-    std::ostream & write_matrix(std::ostream &out, _hv_t)
-    {
-        for (int i = 0; i < _m; i++)
-        {
-            for (int j = 0; j < _n; j++)
-            {
-                out << (j ? "," : "") << _h_data[i + j * _m];
-            }
-            out << "\n";
-        }
-        return out;
-    }
-
-
-    /**
-     * Prints matrix in CSV to output stream
-     */
-    std::ostream & write_matrix(std::ostream &out, int8_t)
-    {
-        for (int i = 0; i < _m; i++)
-        {
-            for (int j = 0; j < _n; j++)
-            {
-                out << (j ? "," : "") << int32_t(_h_data[i + j * _m]);
-            }
-            out << "\n";
-        }
-        return out;
-    }
-
-
-    /**
-     * Prints matrix in CSV to output stream
-     */
-    std::ostream & write_matrix(std::ostream &out)
-    {
-        return write_matrix(out, _h_data[0]);
-    }
-
-
-    //-----------------------------------------------------------------------------
-    // Floating point "almost-equal" utilities
-    //-----------------------------------------------------------------------------
-
-    static bool almost_equal_ulps(half_t a, half_t b, int max_ulps)
-    {
-        if (a == b)
-            return true;
-
-        int32_t int_diff = abs(a.raw() - b.raw());
-        if (int_diff <= max_ulps)
-            return true;
-        return false;
-    }
-
-
-    static bool almost_equal_ulps(float a, float b, int max_ulps)
-    {
-        if (a == b)
-            return true;
-        int32_t int_diff = abs(*(int32_t*)&a - *(int32_t*)&b);
-        if (int_diff <= max_ulps)
-            return true;
-        return false;
-    }
-
-
-    static bool almost_equal_ulps(double a, double b, int max_ulps)
-    {
-        if (a == b)
-            return true;
-        int64_t int_diff = abs(*(int64_t*)&a - *(int64_t*)&b);
-        if (int_diff <= max_ulps)
-            return true;
-        return false;
-    }
-
-    static bool almost_equal_ulps(int32_t a, int32_t b, int max_ulps)
-    {
-        return (a == b);
-    }
-
-
     //-----------------------------------------------------------------------------
     // matrix operations
     //-----------------------------------------------------------------------------
-
-
-    /**
-     * Returns matrix equality
-     */
-    bool operator==(const matrix<value_t> &mat) const
-    {
-        int max_ulps = 30;
-
-        if (_m != mat._m || _n != mat._n)
-        {
-            fprintf(stderr, "Error: dimension mismatch during matrix comparison.\n"); exit(1);
-        }
-
-        for (int j = 0; j < _n; j++)
-        {
-            for (int i = 0; i < _m; i++)
-            {
-                if (!almost_equal_ulps(_h_data[i + j * _m], mat._h_data[i + j * _m], max_ulps))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-
-    /**
-     * Returns matrix inequality
-     */
-    bool operator!=(const matrix<value_t> &mat) const
-    {
-        return !(*this == mat);
-    }
-
 
     /**
      * Computes this = (alpha * op(A) * op(B)) + (beta * this), specialized for gemm_nn
