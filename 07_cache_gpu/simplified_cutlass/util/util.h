@@ -35,28 +35,17 @@
 #include "debug.h"
 #include "device_introspection.h"
 #include "io_intrinsics.h"
-#include "math.h"
-#include "nv_std.h"
-#include "printable.h"
 #include "matrix_transform.h"
-
-
-
 namespace cutlass {
-
-
 /******************************************************************************
  * int_constant
  ******************************************************************************/
-
 /**
  * Shorthand for nv_std::integral_constant of int32_t type
  */
 template <int V>
 struct int_constant : nv_std::integral_constant<int32_t, V>
 {};
-
-
 /******************************************************************************
  * Uninitialized
  ******************************************************************************/
@@ -65,8 +54,7 @@ struct int_constant : nv_std::integral_constant<int32_t, V>
  * \brief A storage-backing wrapper that allows types with non-trivial constructors to be aliased in unions
  */
 template <typename T>
-struct __align__(16) uninitialized
-{
+struct __align__(16) uninitialized{
     /// Backing storage
     uint8_t storage[sizeof(T)];
 
@@ -76,7 +64,4 @@ struct __align__(16) uninitialized
         return reinterpret_cast<T&>(*this);
     }
 };
-
-
-
 } // namespace cutlass
