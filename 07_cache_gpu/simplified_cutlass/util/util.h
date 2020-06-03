@@ -37,12 +37,6 @@
 #include "io_intrinsics.h"
 #include "matrix_transform.h"
 namespace cutlass {
-/******************************************************************************
- * int_constant
- ******************************************************************************/
-/**
- * Shorthand for nv_std::integral_constant of int32_t type
- */
 template <int V>
 struct int_constant : nv_std::integral_constant<int32_t, V>
 {};
