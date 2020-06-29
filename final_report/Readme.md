@@ -1,8 +1,10 @@
 # 19M38202
 ### Files
 
-Please look at the jupyter file titled `Final_report_plots.ipynb`, it contains plots of running the C++ and CUDA code. 
+Please look at the jupyter file titled `Final_report_plots.ipynb`, it contains plots of running the C++ and CUDA code. The jupyter file parses the below result files which can be obtained by running the code.
+
 The files `results_cav_nt100.csv` and `results_cav_nt700.csv` contains the results of the conversion of code from python to C++. They are the same results for OpenACC and OpenMP code for `nt=100` and `nt=700`.
+
 Th files `results_nt100.csv` and `results_nt100.csv` are the results of running CUDA for `nt=100` and `nt=700`.
 
 ### Running the code
