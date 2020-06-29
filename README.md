@@ -1,5 +1,7 @@
 # 19M38202
 
+For the final report please see `final_report` folder
+
 |          | Topic                                | Sample code               |
 | -------- | ------------------------------------ | ------------------------- |
 | Class 1  | Introduction to parallel programming |                           |
