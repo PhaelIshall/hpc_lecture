@@ -34,8 +34,6 @@
 
 #include <cuda_runtime.h>
 
-#include <util/debug.h>
-
 namespace cutlass {
 
 
@@ -57,12 +55,6 @@ struct gpu_timer
         CUDA_PERROR_EXIT(cudaEventCreate(&_stop));
     }
 
-    ~gpu_timer()
-    {
-        CUDA_PERROR_EXIT(cudaEventDestroy(_start));
-        CUDA_PERROR_EXIT(cudaEventDestroy(_stop));
-    }
-
     void start()
     {
         CUDA_PERROR_EXIT(cudaEventRecord(_start, 0));
@@ -81,27 +73,5 @@ struct gpu_timer
         return elapsed;
     }
 };
-
-
-/******************************************************************************
- * sleep_millis
- ******************************************************************************/
-
-#ifdef _WIN32
-    #include <windows.h>
-
-    void sleep_millis(unsigned milliseconds)
-    {
-        Sleep(milliseconds);
-    }
-#else
-    #include <unistd.h>
-
-    void sleep_millis(unsigned milliseconds)
-    {
-        usleep(milliseconds * 1000); // takes microseconds
-    }
-#endif
-
 
 } // namespace cutlass
