@@ -3,7 +3,7 @@
 #include<iostream>
 #include <math.h> 
 #include <omp.h>
-#import <fstream>
+#include <fstream>
 
 using namespace std;
 void print_matrix(float *m, int x, int y){
@@ -44,8 +44,8 @@ void pressure_poisson(float*  p,float*  b, float dx, float dy, int nx, int ny){
   copy_matrix(p, pn, 41);
   for (int q=0; q<nit; q++){
       copy_matrix(p, pn, nx);
-  
-  #pragma omp parallel for 
+ 
+  #pragma omp parallel for collapse(2)
   for (int i=1; i<ny-1; i++){
     for (int j=1; j<nx-1; j++){
       //already using pn instead of p, omp parallel for is sufficient
@@ -78,7 +78,7 @@ void pressure_poisson(float*  p,float*  b, float dx, float dy, int nx, int ny){
 void build_up_b(float*b, float* u,  float*v, float dx, float dy, int nx, int ny){
   int rho = 1;
   float nu = 0.1, dt = 0.001;
-    #pragma omp parallel for 
+    #pragma omp parallel for collapse(2) 
     for (int i=1; i<ny-1; i++){
       for (int j=1; j<nx-1; j++){  //below should be ny but since ny=nx it should work
         b[i*nx+j] = (rho * ((1/dt) * ((u[i*nx+j+1] - u[i*nx+j-1]) / (2*dx) + (v[(i+1)*nx+j] - v[(i-1)*nx+j])/ (2 * dy)) - 
@@ -112,10 +112,9 @@ void initiate_matrix(float *a, float value, int x, int y){
         
         //since we are using un and u copies there is no conflict 
        
-	 #pragma omp parallel for
+	 #pragma omp parallel for collapse(2)
 	for (int i=1; i<ny-1; i++){
           for (int j=1; j<nx-1; j++){ 
-            // u confirmed to work great :D
             u[i*nx+j]= (un[i*nx+j] - 
             un[i*nx+j] * dt/dx *
             (un[i*nx+j] - un[i*nx+j-1]) -
@@ -125,7 +124,6 @@ void initiate_matrix(float *a, float value, int x, int y){
             (un[i*nx+j+1] - 2* un[i*nx+j] + un[i*nx+j-1]) + dt/(pow(dy,2)) * 
             (un[(i+1)*nx+j] - 2 * un[i*nx+j] + un[(i-1)*nx+j])));
 
-            // vi is confirmed too
             v[i*nx+j]= (vn[i*nx+j] - 
             un[i*nx+j] * dt/dx *
             (vn[i*nx+j] - vn[i*nx+j-1]) -
@@ -188,9 +186,9 @@ int main(){
 
   float X[nx*ny], Y[nx*ny];
   float u[nx*ny], v[nx*ny], p[nx*ny], b[nx*ny]; 
-  omp_set_num_threads(4);
-  #pragma omp parallel num_threads(4)
-  #pragma omp parallel for
+  omp_set_num_threads(41);
+  #pragma omp parallel num_threads(41)
+  #pragma omp parallel for collapse(2)
   for (int i=0; i<ny; i++){
     for (int j=0; j<nx; j++){
       X[i*nx+j] = x[j]; //initialize X
