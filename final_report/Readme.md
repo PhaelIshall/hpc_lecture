@@ -13,7 +13,11 @@ Look at file `cavity_openacc.cpp`
 #### CUDA implementation
 Look at file `cavity_cuda.cu`
 
+#### Plots
+
 Please look at the jupyter file titled `Final_report_plots.ipynb`, it contains plots of running the C++ and CUDA code. The jupyter file parses the below result files which can be obtained by running the code.
+
+#### Matrix value results (needed for plotting)
 
 The files `results_cav_nt100.csv` and `results_cav_nt700.csv` contains the results of the conversion of code from python to C++. They are the same results for OpenACC and OpenMP code for `nt=100` and `nt=700`.
 
